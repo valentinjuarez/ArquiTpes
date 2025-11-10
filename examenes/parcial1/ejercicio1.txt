@@ -1,0 +1,19 @@
+1) Las principales diferencias entre un enfoque cliente-servidor con cliente grueso (thick client, on premise) y un enfoque cliente-servidor en la nube pública bajo el modelo SaaS se basan en el costo, la infraestructura y la responsabilidad del mantenimiento.
+
+En el modelo thick client, el sistema se instala localmente en los equipos de la empresa y los servidores se encuentran en sus propias instalaciones (por ejemplo, en un data center interno). Esto implica un alto costo inicial, ya que se debe invertir en hardware, licencias y personal de mantenimiento. Además, si ocurre un corte de luz o una falla en la red local, el servicio se interrumpe, afectando directamente las operaciones.
+
+En cambio, en el modelo SaaS, el sistema se aloja en la nube del proveedor, quien se encarga de la infraestructura, seguridad y actualizaciones. Los usuarios acceden mediante Internet, generalmente desde un navegador web (thin client), sin necesidad de instalar software localmente. Esto reduce significativamente el costo inicial y descarga a la empresa de las tareas de mantenimiento.
+
+2) Que significan la A y la C de las siglas ACID en el contexto de bases de datos relacionales, y como se relaciona esto con el soporte provisto por jpa/hibernate. explique en base a un ejemplo concreto.
+En el contexto de las bases de datos relacionales, las reglas ACID son las que tienen que cumplir las transacciones de un sistema. En este caso A significa Atomicidad y C significa Consistencia. la atomicidad significa que una accion debe realizarse de forma completa o no realizarse en lo absoluto y la consistencia garantiza que una transaccion pueda llevarse de un estado valido a un estado valido respetando todas las reglas de integridad definidas.
+Esto se relaciona directamente con el soporte JPA/Hibernate ya que este provee un sistema de transacciones que cumplen estas reglas, utilizando commit para confirmar un proceso o revertir mediando un rollback. por lo tanto si un sistema de un banco esta desarrollado en JPA/Hibernate podria ocurrir el escenario en el cual un usuario quiere enviar una transferencia a otro usuario pero cuando va a pagar, la aplicacion se da cuenta que no tiene dinero en cuenta por lo tanto se hace un rollback para no dejar estados modificados a la mitad o inconclusos. 
+
+3) model-> usuario.java, producto.java (tablas de la base de datos)
+   dto-> usuarioDTO.java, productoDTO.java (objetos de transf)
+   controller-> usuarioController.java , productoController.java (para los endpoints)
+   service-> usuarioService.java, productoService.java (logica de negocio)
+   repository-> usuarioRepository.java, productoRepository.java (conexion con la bd)
+
+(continuar)
+
+4)
