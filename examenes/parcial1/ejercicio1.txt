@@ -8,12 +8,106 @@ En cambio, en el modelo SaaS, el sistema se aloja en la nube del proveedor, quie
 En el contexto de las bases de datos relacionales, las reglas ACID son las que tienen que cumplir las transacciones de un sistema. En este caso A significa Atomicidad y C significa Consistencia. la atomicidad significa que una accion debe realizarse de forma completa o no realizarse en lo absoluto y la consistencia garantiza que una transaccion pueda llevarse de un estado valido a un estado valido respetando todas las reglas de integridad definidas.
 Esto se relaciona directamente con el soporte JPA/Hibernate ya que este provee un sistema de transacciones que cumplen estas reglas, utilizando commit para confirmar un proceso o revertir mediando un rollback. por lo tanto si un sistema de un banco esta desarrollado en JPA/Hibernate podria ocurrir el escenario en el cual un usuario quiere enviar una transferencia a otro usuario pero cuando va a pagar, la aplicacion se da cuenta que no tiene dinero en cuenta por lo tanto se hace un rollback para no dejar estados modificados a la mitad o inconclusos. 
 
-3) model-> usuario.java, producto.java (tablas de la base de datos)
-   dto-> usuarioDTO.java, productoDTO.java (objetos de transf)
-   controller-> usuarioController.java , productoController.java (para los endpoints)
-   service-> usuarioService.java, productoService.java (logica de negocio)
-   repository-> usuarioRepository.java, productoRepository.java (conexion con la bd)
+3) repository-> UsuarioRepository extends JpaRepository<Usuario,Long> (query a la bd)
+   DTO-> UsuarioCompraDTO(usuario: idUsuario, nombre, transacciones, ticketPromedio. Producto: idProducto, descripcion, totalVentas).
+   service-> UsuarioService-> filtrarUsuario(@param rubro(string) @param edad (int))
+   model-> Usuario(id, nombre, edad, Set<Compra> compras.),
+   Compra(id, fechaHora, Usuario usuario, Set<DetalleCompra> detalles, (opcional total).),
+   DetalleCompra(id, Compra compra, Producto producto, int cantidad, double precioUnitario.),
+   Producto(id, descripcion, String rubro, double precio.).
+Relaciones:
 
-(continuar)
+Usuario 1..* Compra (Compra.usuario ManyToOne).
+Compra 1..* DetalleCompra (DetalleCompra.compra ManyToOne).
+DetalleCompra ManyToOne Producto.
 
-4)
+
+SERVICE:
+public class UsuarioService {
+
+   private final UsuarioRepository repo;
+
+   public UsuarioService (UsuarioRepository repo){
+      this.repo = repo;
+   }
+
+   public void filtrarUsuario (String rubro, int edad){
+      List<UsuarioCompraDTO>lista = repo.filtrar(rubro, edad);
+
+      if(lista.isEmpty()){
+         sysout("no se encontraron usuarios en ese filtro");
+      }
+
+
+      forEach(UsuarioCompraDTO dto : lista){
+         sysout(dto.toString());
+      }
+   }
+}
+
+
+DTO: 
+
+public class UsuarioCompraDTO {
+   private int idUsuario;
+   private string nombre;
+   private int transacciones;
+   private double ticketPromedio;
+   private int idProducto;
+   private String descripcion;
+   private int totalVentas;
+
+   constructor(todos los atributos){
+      todos los atributos seteados
+   }
+   public String toString(){
+     return atributos a String;
+   }
+}
+
+REPOSITORY: 
+
+public interface UsuarioRepository extends JpaRepository<Usuario,Long>{
+
+
+   @Query(" SELECT new UsuarioCompraDTO (
+      u.id,
+      u.nombre,
+      COUNT(DISTINCT c.id)
+      AVG(dc.precioUnitario * dc.cantidad),
+      p.idProducto,
+      p.descripcion,
+      SUM(dc.cantidad)
+   )
+   FROM Usuario u
+   JOIN u.compras c
+   JOIN c.detalles dc
+   JOIN dc.producto p
+   WHERE p.rubro = :rubro
+   AND u.edad = :edad
+   GROUP BY u.id, u.nombre, p.idProducto, p.descripcion
+   HAVING COUNT(DISTINCT c.id) > = 3
+   ")
+   public list<UsuarioCompraDTO> filtrar (@Param("rubro") String rubro, @Param("edad") int edad)
+}
+
+3)B- Para 3b, el cambio clave es que dejás de tener “un único proyecto que lo hace todo” y pasás a separar el dominio en servicios independientes con sus propias bases de datos, APIs y responsabilidades. Eso impacta directamente en cómo armás el reporte (ya no podés hacer un JOIN directo entre entidades de distintos servicios).
+   lo que deberias hacer es crear un servicio por dominio, asi como usuario, producto, ventas, reporte. y conectar estos servicios a traves del controller utilizando endpoints solicitando informacion a los otros microservicios para poder completar los reportes.
+
+4) La plataforma Render segun lo visto en clase, corresponde al modelo de oferta de servicio PaaS(platform as a service) ya que provee un entorno preconfigurado para desplegar y desarrollar aplicaciones. 
+Siguiendo el ejemplo del punto 3) desplegar el monolito de Spring Boot como Web Service en Render, conectándolo a una base Render PostgreSQL; configurar variables de entorno (DB_URL, USER, PASS) y activar deploy continuo desde Git. Alternativamente, en microservicios, publicar cada servicio (usuarios, productos, ventas, reporting) como Web Service separado dentro de Render y usar su red/SSL gestionados.
+
+5) El patron DTO lo que hace es crear un DTO(data transfer object) que es un objeto simple utilizado para transferir datos entre capas, sin exponer directamente las entidades del modelo.
+como ventajas tiene que es mas seguro ya que no se exponen los datos del model sino que se acceden directamente desde el DTO, reduccion del trafico de red ya que solo se envia la informacion necesaria y la separacion entre las capas de persistencia y la de presentacion.
+este patron en el contexto de una aplicacion Springboot se utiliza de esta manera:
+public class CustomerDTO {
+   private int id
+   private String nombre
+}
+Desventajas / cuidados:
+
+Código adicional (mappers).
+Riesgo de duplicar demasiados DTOs si no se gestionan bien.
+Si el DTO crece y empieza a tener lógica, deja de cumplir su propósito.
+ 
+ 6)
