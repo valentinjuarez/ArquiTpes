@@ -1,0 +1,156 @@
+1) Las diferencias entre estos enfoques son que principalmente un enfoque cliente-servidor variante thick-client hace referencia a aquellas empresas que utilizan servicios instalados localmente. La principal caracteristica es que tienen sus propios servidores, dispositivos, bases de datos y aplicaciones instaladas localmente, ademas realizan de forma periodica sus propios mantenimientos.
+Si hablamos de on-premise hablamos de un costo inicial de inversion caro ya que se necesita invertir en infraestructura, mantenimiento, licencias e instalacion de los equipos necesarios.
+Por otro lado el enfoque de cliente-servidor utilizando una cloud publica bajo el modelo IaaS (infrastructure as a service) es en varias ocasiones convenientes ya que bajo el modelo Iaas el que ofrece el hardware (servidores, almacenamiento, dispositivos) corre a cargo del proveedor de la cloud publica. Por lo tanto el costo inicial es casi nulo, solo pagar la suscripcion al servicio.
+Ademas en una cloud publica la empresa se conecta a traves de internet con lo cual es menos costoso que tener una aplicacion instalada localmente en cada dispositivo y mas seguro para los riesgos de cortes y caidas del sistema.
+El mantenimiento tambien corre por cuenta del proveedor asi que la empresa que utiliza el servicio solo tiene que preocuparse en tener conexion a internet y poder pagar la suscripcion.
+
+2) El patron Factory se combina de 2 patrones creacionales relacionados ya que vincula al Factory Method y al Abstract Factory.
+el Factory Method lo que hace es definir un metodo abstracto para la creacion de objetos, permitiendo que las subclases decidan que tipo concreto de objeto instanciar.
+ejemplo:
+
+A su vez esta el Abstract Factory que vendria a hacer como el mas general ya que este permite crear familias de objetos relacionados (como por ejemplo DAOs para distintas bases de datos) sin especificar sus clases concretas.
+este patron es super importante en sistemas los cuales la base de datos puede variar, se emplea esta fabrica de fabricas y crea DAOs especificos segun la tecnologia de persistencia.
+
+este patron en aplicaciones JDBC se utiliza para la creacion de conexiones o DAOs para centralizarlos y evitar duplicar el codigo de conexion, a su vez se utiliza para simplificar cambios de configuracion como por ejemplo de PostgreSQL a MySQL.
+por otro lado en aplicaciones JPA o SpringBoot se lo utiliza de forma mas implicita ya que en JPA el usuario trabaja con entityManager y entityManagerFactory sin saber sus implementaciones, este no crea conexiones ni consultas SQL manualmente.
+desde el lado de SpringBoot se utiliza los repository que establecen las conexiones mediante JpaRepository que crea internamente una factory de repositorios para crear las implementaciones directamente en tiempo de ejecucion.
+ 
+ 3) model-> PersonEntity (idPersona, nombre, apellido)
+    model->PhoneBookEntity(idLibro, nroTel, apellido)
+    service-> PersonService (filtrarPersonas())
+    repository-> PersonRepository-> filtrar() + Query 
+    DTO-> ListaPersonasDTO (apellido, nombre, telefono, tieneMasTel)
+
+
+    SERVICE: 
+
+    public class PersonService {
+
+        private final PersonRepository repo;
+
+        public PersonService (PersonRepository repo){
+            this.repo = repo;
+        }
+
+        public List<ListaPersonasDTO> filtrarPersonas(){
+
+            List<ListaPersonasDTO> personas = repo.filtrar
+
+            if(personas.isEmpty()){
+                sysout("no hay personas")
+            }
+
+            forEach(ListaPersonasDTO dto : personas){
+                sysout(dto.ToString())
+            }
+        }
+    }
+
+
+    DTO: 
+
+    public class ListaPersonasDTO {
+        private String apellido;
+        private String nombre;
+        private String telefono;
+        private boolean tieneMasTel;
+
+
+        constructor con todos los parametros...
+    }
+
+    REPOSITORY: 
+
+    public interface PersonRepository extends JpaRepository<PersonEntity,Long>{
+
+        @Query("SELECT new ListaPersonasDTO(
+            p.apellido,
+            p.nombre,
+            (
+                SELECT t.nroTel
+                FROM PhoneBookEntity t
+                WHERE t.apellido = p.apellido
+                ORDER BY t.idLibro ASC
+                LIMIT 1;
+            )
+            (
+                SELECT CASE WHEN COUNT (t) > 1 THEN TRUE ELSE FALSE END
+                FROM PhoneBookEntity t
+                WHERE t.apellido = p.apellido
+            )
+            FROM PersonEntity p
+            ORDER BY p.apellido
+        ")
+        )
+        public List<ListaPersonasDTO> filtrar();
+    }
+
+    4) model-> Producto (id, descripcion, precio)
+       model-> Compra(id, fecha, List<DetalleCompra> detalles)
+       model-> DetalleCompra(id, Compra compra, Producto producto, int cantidad)
+       service-> ProductoService-> filtrarProducto(int precio)
+       repository-> ProductoRepository-> filtrar(@Param("precio") int precio)
+       DTO-> ListaProductosDTO(nombre, descripcion, cantidadVentas)
+
+       DTO:
+
+       public class ListaProductosDTO{
+
+        private String nombre;
+        private String descripcion;
+        private int cantidadVentas;
+        
+        constructor con todos los parametros...
+       } 
+
+
+       SERVICE:
+
+       public class ProductoService{
+        private final ProductoRepository repo;
+
+        public ListaProductosDTO(ProductoRepository repo){
+            this.repo = repo;
+        }
+
+        public List<ListaProductosDTO> filtrarProducto(int precio){
+            List<ListaProductosDTO> productos = repo.filtrar
+
+            if(productos.isEmpty()){
+                sysout("no hay productos")
+            }
+
+            forEach(ListaProductosDTO dto : productos){
+                sysout(dto.ToString())
+            }
+        }
+    }
+
+    REPOSITORY: 
+
+    public interface ProductoRepository extends JpaRepository<Producto,Long>{
+
+        @Query(" SELECT new ListaProductosDTO(
+            p.nombre,
+            p.descripcion,
+            SUM(dc.cantidad)
+        )
+        FROM Producto p
+        JOIN DetalleCompra dc ON dc.producto.id = p.id
+        JOIN Compra c ON c.id = dc.compra.id
+        WHERE p.precio < :precio
+        GROUP BY p.id, p.nombre, p.descripcion, c.fecha
+        HAVING SUM(dc.cantidad) >= 3
+        ORDER BY p.nombre
+        ")
+
+        public List<ListaProductosDTO> filtrar(@Param("precio") int precio)
+    }
+
+5)En una arquitectura de microservicios, la aplicación deja de ser un único monolito y se divide en servicios independientes para productos, compras y reportes, cada uno con su propio repositorio, lógica y base de datos.
+Los joins entre entidades se reemplazan por llamadas REST entre servicios, y el reporte se construye componiendo datos externos.
+Se
+6) la correcta es la tabla B.
+7) todas las anteriores.
+8) la opcion correcta es la B.
+9) costos hundidos
