@@ -110,4 +110,15 @@ Código adicional (mappers).
 Riesgo de duplicar demasiados DTOs si no se gestionan bien.
 Si el DTO crece y empieza a tener lógica, deja de cumplir su propósito.
  
- 6)
+ 6) DISPONIBILIDAD = Ttotal - Tcaida / tTotal x 100
+
+ Ttotal = 8760hs
+ Tcaida = segun eventos = 45 min + 1 hora 15 min = 2 horas
+
+ evento1 = se cae el servicio web 0.15 probabilidad
+ TcaidaEvento1 = 0.15 x 5 = 45 minutos
+
+evento2 = se cae la base de datos 0.25 probabilidad
+TcaidaEvento2 = 0.25 x 5 = 1 hora 15 minutos
+
+disp = 8760 - 2 / 8760 x 100 = 99,98%
