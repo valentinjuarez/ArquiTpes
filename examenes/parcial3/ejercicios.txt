@@ -1,0 +1,31 @@
+1) ACID describe las propiedades que garantizan que las transacciones en bases de datos relacionales se ejecuten de forma correcta, confiable y consistente. JPA/Hibernate implementan estas propiedades mediante el manejo automático de transacciones, commits y rollbacks, asegurando atomicidad, consistencia, aislamiento y durabilidad.
+En cambio, muchas bases NoSQL priorizan la escalabilidad y disponibilidad, por lo que implementan modelos BASE, con consistencia eventual y transacciones más limitadas que las ACID tradicionales.
+A — Atomicity (Atomicidad)
+
+La transacción se ejecuta toda completa o no se ejecuta nada.
+Si algo falla, se hace rollback y la BD vuelve al estado anterior.
+
+C — Consistency (Consistencia)
+
+Una transacción lleva la BD de un estado válido a otro estado válido, respetando restricciones (PK, FK, checks, etc.).
+
+I — Isolation (Aislamiento)
+
+Cada transacción debe ejecutarse como si fuera la única.
+Evita lecturas sucias, inconsistentes o no repetibles según el nivel de aislamiento.
+
+D — Durability (Durabilidad)
+
+Una vez confirmado el commit, los cambios quedan guardados incluso ante fallas (crash, corte de luz).
+
+2) El patron DAO establece un objeto cuya responsabilidad es acceder directamente a la base de datos, este encapsula todas las operaciones CRUD usando SQL o JPQL.
+Tiene como ventajas que aisla el codigo SQL del resto de la app, facilita el testing y reduce la repeticion del codigo.
+Como desventajas tiene que cuando la app crece terminan muchos DAOs parecidos, por lo que no es tan escalable.
+En entornos JDBC el patron DAO es indispensable ya que todo la implementacion SQL esta dentro de ese objeto.
+En entornos JPA o SpringBoot se reemplaza casi en su totalidad por los repository que tienen implementaciones CRUD automaticas y algunas mas.
+
+El patron Repository es una abstraccion del acceso a datos mas orientada al dominio que al SQL, representa a un almacen de entidades.
+Tiene como ventajas la reduccion del codigo de acceso a datos, semantica simple y se integra a JPA automaticamente.
+Como desventajas tiene que se tiene menos control sobre el SQL exacto y es dificil de optimizar en casos muy complejos
+En JDBC no existe nativamente sino que hay que implementarlo manualmente.
+En JPA o SpringBoot son reemplazados por el EntityManager y por Spring Data JPA respectivamente.
